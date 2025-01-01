@@ -5,14 +5,41 @@
 基于 C++20 实现一个简化版的 quickcheck 一个基本的属性测试框架。
 
 包括如下功能：
+
 （1）随机输入生成：
-使用 C++ 的随机数库（如 <random>）生成随机数据。支持基本类型（如 int、double、std::string）和自定义类型。
+使用 C++ 的random生成随机数据。支持基本类型（如 int、double、std::string）和自定义类型。
 
 （2）属性测试：
 用户提供一个 Lambda 函数作为属性测试函数。会生成随机输入并验证属性是否成立。
 
-（3）缩小失败用例：
-如果测试失败，尝试缩小输入，找到最小的失败用例。
+（3）收缩失败用例：
+如果测试失败，尝试收缩输入，找到最小的失败用例。
+
+使用示例：
+
+```cpp
+#include "quickcheck.hpp"
+
+// 示例：测试 reverse 函数的属性
+bool testReverseProperty(const std::vector<int> &xs)
+{
+    std::vector<int> rev = xs;
+    std::reverse(rev.begin(), rev.end());
+    std::vector<int> revRev = rev;
+    std::reverse(revRev.begin(), revRev.end());
+    return revRev == xs;
+}
+
+int main()
+{
+    // 测试 reverse 函数的属性
+    QuickCheck::check<std::vector<int>>(
+        "reverse(reverse(xs)) == xs",
+        testReverseProperty);
+
+    return 0;
+}
+```
 
 
 ## 依赖
@@ -49,25 +76,25 @@ std::tuple<Ts...>：生成随机元组，元素类型由 RandomGenerator<Ts> 生
 
 std::pair<K, V>：生成随机键值对，键和值分别由 RandomGenerator<K> 和 RandomGenerator<V> 生成。
 
-### 缩小失败(shrink)
+### 收缩失败用例(shrink)
 
-实现缩小失败用例的功能是 quickcheck 的核心特性之一。当测试失败时，我们需要逐步缩小输入，找到最小的、仍然能触发失败的用例。
+实现收缩失败用例的功能是 quickcheck 的核心特性之一。当测试失败时，我们需要逐步收缩输入，找到最小的、仍然能触发失败的用例。
 
-缩小策略：
++ 收缩策略：
 
 对于数值类型（如 int、double），逐步将值减半。
 
 对于容器类型（如 std::vector、std::map），逐步删除元素。
 
-对于复合类型（如 std::tuple），逐步缩小其组成部分。
+对于复合类型（如 std::tuple），逐步收缩其组成部分。
 
-递归缩小：
++ 递归收缩：
 
-对于复杂类型，递归地缩小其子元素。
+对于复杂类型，递归地收缩其子元素。
 
-停止条件：
++ 停止条件：
 
-当输入无法进一步缩小，或缩小后的输入不再触发失败时，停止缩小。
+当输入无法进一步收缩，或收缩后的输入不再触发失败时，停止收缩。
 
 例如，测试函数错误，输出：
 
